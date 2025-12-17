@@ -19,12 +19,15 @@ class PendulumPPOEnv:
 
     def step(self, action):
 
+        action = action.view(-1, 1)
+
+        action = action.to(self.device)
+
         torque = torch.where(
             action == 0,
-            torch.tensor([-1.0], device=self.device),
-            torch.tensor([+1.0], device=self.device),
-        ).unsqueeze(0)
-
+            torch.full_like(action, -1.0),
+            torch.full_like(action, +1.0),
+        )
         x = self.x
         x_next = rk4_step(self.system.f_torch, x, torque, self.dt)
 

@@ -6,33 +6,27 @@ from pathlib import Path
 
 from invariant_rl.dynamics.pendulum import InvertedPendulum
 from invariant_rl.regions.ellipse import EllipseRegion
-from invariant_rl.models.lyapunov import SigmoidGeometryAwareW
-from invariant_rl.models.policies import MLPPolicy
+from invariant_rl.models.PPOModel import PPOModel
 from invariant_rl.losses.zubov import rk4_step
 
 
-checkpoint_path = "runs/model_based/checkpoints/final.pt"
-gif_path = "runs/model_based/animation.gif"
+checkpoint_path = "runs/ppo/ppo_policy.pt"
+gif_path = "runs/ppo/animation.gif"
 
 dt = 0.01
 T = 800
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+
 system = InvertedPendulum()
 region = EllipseRegion(0.3, 0.5)
 
-policy = MLPPolicy([2, 64, 64, 1]).to(device)
-W = SigmoidGeometryAwareW([2, 64, 64, 1], region).to(device)
-
-ckpt = torch.load(checkpoint_path, map_location=device)
-policy.load_state_dict(ckpt["policy"])
-W.load_state_dict(ckpt["W"])
-
-policy.eval()
-W.eval()
+model = PPOModel().to(device)
+model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+model.eval()
 
 
-theta0 = 0.25
+theta0 = 0.1
 omega0 = 0.0
 
 x = torch.tensor(
@@ -52,23 +46,32 @@ for t in range(T):
     ax.set_ylim(-1.2, 1.2)
     ax.set_aspect("equal")
     ax.axis("off")
-    ax.set_title(f"t = {t}")
+    ax.set_title(f"PPO | t = {t}")
 
     fig.canvas.draw()
-    frame = np.array(fig.canvas.renderer.buffer_rgba())
+    frame = np.asarray(fig.canvas.renderer.buffer_rgba())
     frames.append(frame)
 
     plt.close(fig)
 
     with torch.no_grad():
-        u = policy(x)
+        probs = model.policy(x).probs
+        action = probs.argmax(dim=-1, keepdim=True)
+
+        u = torch.where(
+            action == 0,
+            torch.tensor([[-1.0]], device=device),
+            torch.tensor([[+1.0]], device=device),
+        )
+
         x = rk4_step(system.f_torch, x, u, dt)
 
     if not region.inside(x).all():
-        print(f"Exited region at t={t}")
+        print(f"Exited region A at t = {t}")
         break
+
 
 Path(gif_path).parent.mkdir(parents=True, exist_ok=True)
 imageio.mimsave(gif_path, frames, fps=30)
 
-print(f"Animation saved to {gif_path}")
+print(f"PPO animation saved to {gif_path}")
