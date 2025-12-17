@@ -1,0 +1,15 @@
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "invariant_rl"
+version = "0.1.0"
+dependencies = [
+    "torch",
+    "numpy",
+    "matplotlib",
+    "tensorboard",
+    "imageio",
+]

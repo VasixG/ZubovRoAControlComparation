@@ -1,0 +1,10 @@
+
+env:
+  dt: 0.01
+  max_steps: 1000
+region:
+  a: 0.3
+  b: 0.5
+training:
+  epochs: 100
+  batch_size: 256
