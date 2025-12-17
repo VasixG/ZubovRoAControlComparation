@@ -14,8 +14,8 @@ Zubov-based controller safely recovers, in contrast baselines do not(go out of r
 
 Target shape variations:
 
-<img src="images/ellipse.jpg" width="45%">
-<img src="images/flower.jpg" width="45%">
+<img src="images/ellipse.jpg" width="40%">
+<img src="images/flower.jpg" width="40%">
 
 Baselines near to stationary point
 
@@ -23,6 +23,11 @@ Baselines near to stationary point
   <img src="images/animation_PPO.gif" width="32%">
   <img src="images/animation_DQN.gif" width="32%">
 </p>
+
+Comparation of mean time in region A(MTIA) and probability that during all time from 0 to T trajectories would be in region A(P_inv):
+
+<img src="images/comparison_mtia_metrics.png" width="40%">
+<img src="images/comparison_p_inv_metrics.png" width="40%">
 
 
 ## Project Structure
